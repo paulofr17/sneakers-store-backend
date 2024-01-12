@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const app = express();
-const port = parseInt(process.env.PORT) || 8080;
+const port = Number(process.env.PORT) || 8080;
 
 const userRouter = require("./src/app/user/user.router");
 const productRouter = require("./src/app/product/product.router");
@@ -25,6 +25,4 @@ app.use(function (req, res, next) {
   next();
 });
 
-app.listen(port, function () {
-  console.log(`Server listening on port: ${port}`);
-});
+app.listen(port);

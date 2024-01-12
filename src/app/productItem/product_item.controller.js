@@ -11,7 +11,6 @@ module.exports = {
       });
       res.send(productItems);
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         success: 0,
         message: "An error occurred while fetching product items",
@@ -87,7 +86,6 @@ module.exports = {
         message: "Product not found",
       });
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         success: 0,
         message: "An error occurred while fetching products",
@@ -139,7 +137,6 @@ module.exports = {
       });
       return res.status(201).send(productItem);
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         success: 0,
         message: "An error occurred while adding product item",
@@ -198,7 +195,6 @@ module.exports = {
         .status(201)
         .json({ sucess: 1, message: "Product stock updated successfully" });
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         success: 0,
         message: "An error occurred while adding product item",

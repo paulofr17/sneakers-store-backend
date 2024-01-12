@@ -74,7 +74,6 @@ module.exports = {
         message: "Cart not found",
       });
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         success: 0,
         message: "An error occurred while fetching cart items",
@@ -108,7 +107,6 @@ module.exports = {
 
       res.status(200).send(cartItem);
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         success: 0,
         message: "An error occurred while adding items to cart",

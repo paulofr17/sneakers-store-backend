@@ -78,7 +78,6 @@ module.exports = {
 
       res.send(products);
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         success: 0,
         message: "An error occurred while fetching products",
@@ -115,7 +114,6 @@ module.exports = {
         message: "Product not found",
       });
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         success: 0,
         message: "An error occurred while fetching products",
@@ -134,7 +132,6 @@ module.exports = {
       });
       res.status(201).send(product);
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         success: 0,
         message: "An error occurred while creating product",
@@ -150,7 +147,6 @@ module.exports = {
       });
       res.send(product);
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         success: 0,
         message: "An error occurred while deleting product",

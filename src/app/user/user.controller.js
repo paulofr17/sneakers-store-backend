@@ -1,4 +1,4 @@
-const { genSaltSync, hashSync, compareSync } = require("bcryptjs");
+const { genSalt, hash, compareSync } = require("bcryptjs");
 const { sign } = require("jsonwebtoken");
 const prisma = require("../../config/prisma");
 const jwt = require("jsonwebtoken");
@@ -40,10 +40,8 @@ module.exports = {
   },
   validateSession: async (req, res) => {
     try {
-      console.log("validateSession");
       const token = req.get("authorization").slice(7);
       const decoded = jwt.decode(token);
-
       if (decoded) {
         const cart = await prisma.cart.findFirst({
           where: { user_id: decoded.user.id },
@@ -67,10 +65,9 @@ module.exports = {
     }
   },
   createUser: async (req, res) => {
-    console.log("register");
     const body = req.body;
-    const salt = genSaltSync(10);
-    body.password = hashSync(body.password, salt);
+    const salt = await genSalt(Number(process.env.BCRYPT_SALT));
+    body.password = await hash(body.password, salt);
     try {
       const uniqueEmail = await prisma.user.findFirst({
         where: {
@@ -97,7 +94,6 @@ module.exports = {
       });
       res.status(201).send(user);
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         success: 0,
         message: "An error occured in the register process",
@@ -117,8 +113,8 @@ module.exports = {
         where: { user_id: user.id },
       });
       user.password = undefined;
-      const jwt = sign({ user: user }, "qwe1234", {
-        expiresIn: "1h",
+      const jwt = sign({ user: user }, process.env.JWT_SECRET, {
+        expiresIn: "7d",
       });
       return res.status(200).json({
         userId: user.id,
