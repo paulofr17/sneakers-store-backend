@@ -1,146 +1,166 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
-  provider          = "mysql"
-  url               = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
-  relationMode      = "prisma"
-}
-
-model cart {
-  id        Int         @id @unique(map: "id_UNIQUE") @default(autoincrement())
-  user_id   Int
-  user      user        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cart_user")
-  cart_item cart_item[]
-
-  @@index([user_id], map: "fk_cart_user_idx")
-}
-
-model cart_item {
-  id               Int           @id @unique(map: "id_UNIQUE") @default(autoincrement())
-  cart_id          Int
-  product_stock_id Int
-  quantity         Int
-  cart             cart          @relation(fields: [cart_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cart_item_cart")
-  product_stock    product_stock @relation(fields: [product_stock_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cart_item_product_stock")
-
-  @@unique([cart_id, product_stock_id])
-  @@index([cart_id], map: "fk_cart_item_cart_idx")
-  @@index([product_stock_id], map: "fk_cart_item_product_stock")
-}
-
-model order {
-  id         Int          @id @unique(map: "id_UNIQUE") @default(autoincrement())
-  user_id    Int?
-  user       user?        @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_user")
-  order_item order_item[]
-
-  @@index([user_id], map: "fk_order_user_idx")
-}
-
-model order_item {
-  id              Int          @id @unique(map: "id_UNIQUE") @default(autoincrement())
-  order_id        Int?
-  product_item_id Int
-  price           Decimal?     @db.Decimal(8, 2)
-  quantity        Int
-  order           order?       @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_item_order")
-  product_item    product_item @relation(fields: [product_item_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_item_product_item")
-
-  @@index([order_id], map: "fk_order_item_order_idx")
-  @@index([product_item_id], map: "fk_order_item_product_item_idx")
-}
-
-model product {
-  id               Int                @id @unique(map: "id_UNIQUE") @default(autoincrement())
-  name             String             @db.VarChar(255)
-  description      String             @db.Text
-  price            Decimal            @db.Decimal(8, 2)
-  image            Bytes
-  active           Boolean            @default(true)
-  created_at       DateTime           @default(now())
-  updated_at       DateTime           @default(now()) @updatedAt
-  product_item     product_item[]
-  product_category product_category[]
+  // provider     = "mysql"
+  // url          = env("DATABASE_DEV")
+  // relationMode = "prisma"
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  directUrl    = env("DIRECT_URL")
 }
 
 model user {
-  id       Int     @id @unique(map: "id_UNIQUE") @default(autoincrement())
-  name     String  @db.VarChar(255)
-  email    String  @unique @db.VarChar(255)
-  password String  @db.VarChar(255)
-  cart     cart[]
-  order    order[]
+  id         Int      @id @unique @default(autoincrement())
+  name       String   @db.VarChar(255)
+  email      String   @unique @db.VarChar(255)
+  password   String?  @db.VarChar(255)
+  googleId   String?  @unique @db.VarChar(255)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+  role       role     @default(user)
+  cart       cart?
+  order      order[]
 }
 
-model size {
-  number        Decimal         @id @unique(map: "number_UNIQUE") @db.Decimal(4, 1)
-  product_stock product_stock[]
+enum role {
+  admin
+  user
 }
 
-model product_item {
-  id            Int             @id @default(autoincrement())
-  product_id    Int
-  color_name    String          @db.VarChar(50)
-  description   String?         @db.VarChar(255)
-  price         Decimal         @db.Decimal(8, 2)
-  preview_image Bytes
-  created_at    DateTime        @default(now())
-  updated_at    DateTime        @default(now()) @updatedAt
-  active        Boolean         @default(true)
-  image         image[]
-  product_stock product_stock[]
-  product       product         @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_product_size_product1")
-  color         color           @relation(fields: [color_name], references: [name], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_color")
-  order_item    order_item[]
-
-  @@unique([product_id, color_name])
-  @@index([product_id], map: "fk_product_size_product1_idx")
-}
-
-model color {
-  name         String         @id @unique(map: "name_UNIQUE") @db.VarChar(50)
-  product_item product_item[]
-}
-
-model image {
-  id              Int          @id @default(autoincrement())
-  file            Bytes
-  product_item_id Int
-  product_item    product_item @relation(fields: [product_item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_image_product_item1")
-
-  @@index([product_item_id], map: "fk_image_product_item1_idx")
-}
-
-model product_stock {
-  id              Int          @id @default(autoincrement())
-  quantity        Int          @default(0)
-  product_item_id Int
-  size_number     Decimal      @db.Decimal(4, 1)
-  product_item    product_item @relation(fields: [product_item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_product_stock_product_item")
-  size            size         @relation(fields: [size_number], references: [number], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_stock_size")
-  cart_item       cart_item[]
-
-  @@unique([product_item_id, size_number])
-  @@index([product_item_id], map: "fk_product_stock_product_item_idx")
-  @@index([size_number], map: "fk_product_stock_size_idx")
-}
-
-model category {
-  name             String             @id @unique(map: "name_UNIQUE") @db.VarChar(100)
+model product {
+  id               Int                @id @unique @default(autoincrement())
+  name             String             @db.VarChar(255)
+  description      String             @db.Text
+  price            Decimal            @db.Decimal(8, 2)
+  active           Boolean            @default(true)
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @default(now()) @updatedAt
+  product_variant  product_variant[]
   product_category product_category[]
 }
 
+model product_variant {
+  id            Int             @id @default(autoincrement())
+  product_id    Int
+  slug          String          @unique
+  price         Decimal         @db.Decimal(8, 2)
+  color_name    String          @db.VarChar(50)
+  preview_image String
+  active        Boolean         @default(true)
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @default(now()) @updatedAt
+  image         image[]
+  product_stock product_stock[]
+  product       product         @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  color         color           @relation(fields: [color_name], references: [name], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([product_id, color_name])
+  @@index([color_name])
+  @@index([product_id])
+}
+
+model product_stock {
+  id                 Int             @id @default(autoincrement())
+  quantity           Int             @default(0)
+  product_variant_id Int
+  size_number        Decimal         @db.Decimal(4, 1)
+  product_variant    product_variant @relation(fields: [product_variant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  size               size            @relation(fields: [size_number], references: [number], onDelete: NoAction, onUpdate: NoAction)
+  cart_item          cart_item[]
+  order_item         order_item[]
+
+  @@unique([product_variant_id, size_number])
+  @@index([product_variant_id])
+  @@index([size_number])
+}
+
 model product_category {
-  id            Int      @id @unique(map: "id_UNIQUE") @default(autoincrement())
+  id            Int      @id @unique @default(autoincrement())
   product_id    Int
   category_name String
-  product       product  @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_product_category_product")
-  category      category @relation(fields: [category_name], references: [name], onDelete: Cascade, onUpdate: NoAction, map: "fk_product_category_category")
+  product       product  @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  category      category @relation(fields: [category_name], references: [name], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([product_id, category_name])
-  @@index([product_id], map: "fk_product_category_idx")
-  @@index([category_name], map: "fk_category_idx")
+  @@index([product_id])
+  @@index([category_name])
+}
+
+model cart {
+  id        Int         @id @unique @default(autoincrement())
+  userId    Int         @unique
+  user      user        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  cart_item cart_item[]
+}
+
+model cart_item {
+  id               Int           @id @unique @default(autoincrement())
+  cart_id          Int
+  product_stock_id Int
+  quantity         Int
+  cart             cart          @relation(fields: [cart_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  product_stock    product_stock @relation(fields: [product_stock_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([cart_id, product_stock_id])
+  @@index([cart_id])
+  @@index([product_stock_id])
+}
+
+model order {
+  id         Int          @id @unique @default(autoincrement())
+  user_id    Int
+  price      Decimal      @db.Decimal(8, 2)
+  created_at DateTime     @default(now())
+  updated_at DateTime     @default(now()) @updatedAt
+  user       user         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order_item order_item[]
+
+  @@index([user_id])
+}
+
+model order_item {
+  id               Int            @id @unique @default(autoincrement())
+  order_id         Int
+  product_stock_id Int?
+  name             String
+  description      String         @db.Text
+  preview_image    String
+  color            String
+  size             Decimal
+  quantity         Int
+  price            Decimal        @db.Decimal(8, 2)
+  totalPrice       Decimal        @db.Decimal(8, 2)
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @default(now()) @updatedAt
+  order            order          @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  product_stock    product_stock? @relation(fields: [product_stock_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([order_id])
+  @@index([product_stock_id])
+}
+
+model size {
+  number        Decimal         @id @unique @db.Decimal(4, 1)
+  product_stock product_stock[]
+}
+
+model color {
+  name            String            @id @unique @db.VarChar(50)
+  product_variant product_variant[]
+}
+
+model image {
+  url                String          @id @unique @db.VarChar(255)
+  product_variant_id Int
+  product_variant    product_variant @relation(fields: [product_variant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([product_variant_id])
+}
+
+model category {
+  name             String             @id @unique @db.VarChar(100)
+  product_category product_category[]
 }

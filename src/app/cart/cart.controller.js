@@ -1,11 +1,10 @@
 const prisma = require("../../config/prisma");
-const { bytesToBase64, imagePathToBytes } = require("../helpers/helper.js");
 
 module.exports = {
   getCartItemsByUserId: async (req, res) => {
     try {
       const cart = await prisma.cart.findFirst({
-        where: { user_id: parseInt(req.params.userId) },
+        where: { userId: parseInt(req.params.userId) },
         include: {
           cart_item: {
             select: {
@@ -15,10 +14,9 @@ module.exports = {
                 select: {
                   id: true,
                   size_number: true,
-                  product_item: {
+                  product_variant: {
                     select: {
                       color: true,
-                      description: true,
                       price: true,
                       preview_image: true,
                       product: {
@@ -43,9 +41,8 @@ module.exports = {
             product_stock: {
               id: product_stock_id,
               size_number,
-              product_item: {
+              product_variant: {
                 color,
-                description,
                 price,
                 preview_image,
                 product: { name },
@@ -57,11 +54,10 @@ module.exports = {
             product_id: product_stock_id,
             quantity: quantity,
             name: name,
-            description: description,
             price: Number(price),
             color: color.name,
             size: Number(size_number),
-            preview_image: bytesToBase64(preview_image),
+            preview_image: preview_image,
           };
         });
         return res.status(200).json({
@@ -123,7 +119,7 @@ module.exports = {
         if (!cartItem)
           return res.status(404).json({
             success: 0,
-            message: "Cart Item doenst exist",
+            message: "Cart Item doesnt exist",
           });
 
         if (cartItem.quantity < 2) {

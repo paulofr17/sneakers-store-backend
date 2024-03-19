@@ -1,18 +1,14 @@
-const {
-  getUsers,
-  getUserById,
-  validateSession,
-  createUser,
-  authenticateUser,
-} = require("./user.controller");
 const router = require("express").Router();
-const { checkToken } = require("../../auth/token_validation");
+const { checkToken } = require("../../lib/auth");
+const userController = require("./user.controller");
 
 // User Routes
-router.get("/validateSession", checkToken, validateSession);
-router.get("/", getUsers);
-router.get("/:id", getUserById);
-router.post("/register", createUser);
-router.post("/login", authenticateUser);
+router.get("/validateSession", checkToken, userController.validateSession);
+router.get("/email", userController.getUserByEmail);
+router.get("/:id", userController.getUserById);
+router.get("/", userController.getUsers);
+router.post("/register", userController.createUser);
+router.post("/credentialsLogin", userController.authenticateCredentialsUser);
+router.post("/googleLogin", userController.authenticateGoogleUser);
 
 module.exports = router;
