@@ -87,6 +87,10 @@ module.exports = {
           },
         });
 
+        if (!cart || cart.cart_item.length === 0) {
+          throw new Error("You can't create an order without items in the cart");
+        }
+
         const createdOrder = await tx.order.create({
           data: {
             user: { connect: { id: parseInt(userId) } },
@@ -142,7 +146,7 @@ module.exports = {
       
       return res.status(200).json(order);
     } catch (error) {
-      if (error.message.startsWith('No stock available')) {
+      if (error.message.startsWith('No stock available') || error.message.startsWith("You can't create an order without items in the cart")) {
         return res.status(400).json({ error: error.message });
       }
       return res.status(500).json({ error: "Internal server error" });
