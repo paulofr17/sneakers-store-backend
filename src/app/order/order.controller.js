@@ -24,6 +24,7 @@ module.exports = {
       }).then((orders) => 
         orders.map((order) => ({
             ...order,
+            quantity: order.order_item.reduce((acc, cur) => cur.quantity + acc, 0),
             order_item: order.order_item.map((item) => ({
               id: item.id,
               name: item.name,
