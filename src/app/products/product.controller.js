@@ -253,6 +253,8 @@ module.exports = {
   },
   createProductWithVariants: async (req, res) => {
     try {
+      console.log('create variants');
+      console.log(req.files);
       // Upload images to Google Cloud Storage
       const files = await generateImagesUrl(req.files);
       // // Create product with variants
