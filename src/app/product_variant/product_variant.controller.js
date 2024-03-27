@@ -1,5 +1,5 @@
 const prisma = require("../../config/prisma.js");
-const { bytesToBase64, imagePathToBytes } = require("../helpers/helper.js");
+const { imagePathToBytes } = require("../helpers/helper.js");
 
 module.exports = {
   getProductVariants: async (req, res) => {
@@ -17,79 +17,36 @@ module.exports = {
       });
     }
   },
-  getProductVariantById: async (req, res) => {
-    try {
-      const productItem = await prisma.product_variant.findFirst({
-        where: { id: parseInt(req.params.id) },
+  getNewArrivals: async (req, res) => {
+    try{
+      const products = await prisma.product_variant.findMany({
+        take: 10,
+        orderBy: {
+          created_at: 'desc'
+        },
         select: {
-          id: true,
+          slug: true,
           price: true,
-          product_id: true,
-          color_name: true,
           preview_image: true,
-          image: true,
           product: {
             select: {
-              name: true,
-              description: true,
-            },
-          },
-          product_stock: {
-            select: {
-              id: true,
-              size_number: true,
-              quantity: true,
-            },
-          },
-        },
-      });
-      if (productItem) {
-        const product = [productItem].map(
-          ({
-            id,
-            product_id,
-            price,
-            color_name,
-            product,
-            preview_image,
-            image,
-            product_stock,
-            ...productItem
-          }) => {
-            const productStock = product_stock.map((stock) => {
-              return {
-                id: stock.id,
-                size: stock.size_number,
-                quantity: stock.quantity,
-              };
-            });
-            return {
-              id,
-              product_id,
-              name: product.name,
-              description: product.description,
-              price,
-              color: color_name,
-              product_stock: productStock,
-              ...productItem,
-              preview_image: bytesToBase64(preview_image),
-              images: image.map((image) => {
-                return bytesToBase64(image.file);
-              }),
-            };
+              name: true
+            }
           }
-        );
-        return res.send(product[0]);
-      }
-      res.status(404).json({
-        success: 0,
-        message: "Product not found",
+        }
       });
-    } catch (error) {
-      res.status(500).json({
-        success: 0,
-        message: "An error occurred while fetching products",
-      });
+
+      const newArrivals = products.map((product) => ({
+        name: product.product.name,
+          slug: product.slug,
+          price: product.price,
+          image: product.preview_image
+        })
+      )
+
+      return res.send(newArrivals);
+    } catch(error){
+      return res.send(500).json({error: "An error occurred while fetching new arrivals"})
     }
   },
   getProductVariantBySlug: async (req, res) => {
